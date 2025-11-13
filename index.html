@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Sleep Alarm">
+    <meta name="description" content="A sleep mode alarm app with personality-based aphorisms">
+    <title>Sleep Mode Alarm</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-top">
+                <button id="backBtn" class="btn-header-icon">←</button>
+                <button id="analyticsBtn" class="btn-header-icon">👤</button>
+            </div>
+            <h1>Sleep Mode Alarm</h1>
+            <div class="current-time" id="currentTime"></div>
+        </header>
+
+        <div class="alarm-form" id="alarmForm" style="display: none;">
+            <h2>Set Sleep Alarm</h2>
+            <p class="form-description">Type the aphorism below to activate sleep mode. Your phone will be locked until the alarm goes off.</p>
+            <div class="form-group">
+                <label for="alarmTime">Wake up time:</label>
+                <input type="time" id="alarmTime" required>
+            </div>
+            <div class="form-group">
+                <label for="aphorismDisplay">Type this aphorism:</label>
+                <div class="aphorism-display" id="aphorismDisplay"></div>
+            </div>
+            <div class="form-group">
+                <label for="aphorismInput">Type the aphorism here:</label>
+                <input type="text" id="aphorismInput" placeholder="Type the aphorism exactly as shown above" autocomplete="off">
+                <p id="aphorismError" class="error-message"></p>
+            </div>
+            <button id="setAlarmBtn" class="btn btn-primary">Set Sleep Alarm</button>
+        </div>
+
+        <div class="alarms-section">
+            <h2>Your Alarms</h2>
+            <div id="alarmsList" class="alarms-list">
+                <p class="no-alarms">No alarms set. Add one above!</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="sleepLock" class="sleep-lock">
+        <div class="sleep-lock-content">
+            <h2>Sleep Mode Active</h2>
+            <p>Your phone is locked until the alarm goes off.</p>
+            <div class="sleep-countdown" id="sleepCountdown"></div>
+            <button id="deactivationBtn" class="btn btn-danger" style="margin-top: 30px; max-width: 200px;">Deactivation</button>
+            <p id="deactivationCount" style="margin-top: 15px; font-size: 0.9em; color: #999;"></p>
+        </div>
+    </div>
+
+    <div id="testModal" class="modal">
+        <div class="modal-content test-modal">
+            <h2>Know Yourself</h2>
+            <p class="test-description">Please complete this assessment to personalize your experience. Your results will determine which aphorisms you'll see.</p>
+            <form id="quizForm">
+                <div class="question">
+                    <p><b>Which statement best describes you?</b><br>
+                    <span style="font-size: 0.9em; color: #666;">Choose the one that resonates most with you.</span></p>
+                    <label class="test-option"><input type="radio" name="personality" value="extraversion" required> <span>"I feel energized when I'm around other people."</span></label>
+                    <label class="test-option"><input type="radio" name="personality" value="conscientiousness"> <span>"I feel uncomfortable leaving things unfinished."</span></label>
+                    <label class="test-option"><input type="radio" name="personality" value="agreeableness"> <span>"I easily empathize with how others feel."</span></label>
+                    <label class="test-option"><input type="radio" name="personality" value="neuroticism"> <span>"I often find myself worrying about small things."</span></label>
+                    <label class="test-option"><input type="radio" name="personality" value="openness"> <span>"I enjoy exploring new ideas and experiences."</span></label>
+                </div>
+
+                <button type="submit" id="submitTestBtn" class="btn btn-primary">Next</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="analyticsModal" class="modal">
+        <div class="modal-content analytics-modal">
+            <h2>Analytics</h2>
+            <div id="analyticsContent">
+                <div class="analytics-section">
+                    <h3>Usage Statistics</h3>
+                    <div class="stat-item">
+                        <span class="stat-label">Total Alarms Set:</span>
+                        <span class="stat-value" id="totalAlarmsSet">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Alarms Completed:</span>
+                        <span class="stat-value" id="alarmsCompleted">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Success Rate:</span>
+                        <span class="stat-value" id="successRate">0%</span>
+                    </div>
+                </div>
+                
+                <div class="analytics-section">
+                    <h3>Behavior Patterns</h3>
+                    <div class="stat-item">
+                        <span class="stat-label">Deactivation Used:</span>
+                        <span class="stat-value" id="deactivationCountStat">0 times</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Snooze Used:</span>
+                        <span class="stat-value" id="snoozeCountStat">0 times</span>
+                    </div>
+                </div>
+                
+                <div class="analytics-section">
+                    <h3>Insights</h3>
+                    <div id="analyticsInsights" class="insights-text"></div>
+                </div>
+            </div>
+            <button id="closeAnalyticsBtn" class="btn btn-primary">Close</button>
+        </div>
+    </div>
+
+    <div id="alarmModal" class="modal">
+        <div class="modal-content">
+            <h2>🔔 Alarm!</h2>
+            <p id="alarmMessage"></p>
+            <div id="challengeSection" class="challenge-section">
+                <p class="challenge-text">Type this aphorism to dismiss:</p>
+                <div class="aphorism-challenge">
+                    <div class="aphorism-display-small" id="alarmAphorismDisplay"></div>
+                    <input type="text" id="challengeAnswer" placeholder="Type the aphorism exactly as shown above" autofocus>
+                </div>
+                <p id="challengeError" class="error-message"></p>
+            </div>
+            <div class="alarm-actions-modal">
+                <button id="snoozeBtn" class="btn btn-secondary">Snooze (5 min)</button>
+                <button id="dismissAlarmBtn" class="btn btn-primary">Dismiss</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+

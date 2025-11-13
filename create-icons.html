@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Icon Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            text-align: center;
+        }
+        canvas {
+            border: 1px solid #ccc;
+            margin: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Sleep Alarm App Icon Generator</h1>
+    <p>Click the buttons below to generate and download icons</p>
+    
+    <div>
+        <button onclick="generateIcon(192)">Generate 192x192 Icon</button>
+        <button onclick="generateIcon(512)">Generate 512x512 Icon</button>
+    </div>
+    
+    <canvas id="iconCanvas"></canvas>
+    
+    <script>
+        function generateIcon(size) {
+            const canvas = document.getElementById('iconCanvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            
+            // Create gradient background
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#667eea');
+            gradient.addColorStop(1, '#764ba2');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, size, size);
+            
+            // Draw lock icon
+            ctx.fillStyle = 'white';
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = size / 20;
+            
+            // Draw lock body
+            const lockSize = size * 0.4;
+            const lockX = size / 2;
+            const lockY = size / 2;
+            
+            // Lock body (rectangle with rounded top)
+            const rectX = lockX - lockSize/2;
+            const rectY = lockY - lockSize/4;
+            const rectW = lockSize;
+            const rectH = lockSize * 0.75;
+            const radius = size/20;
+            
+            ctx.beginPath();
+            ctx.moveTo(rectX + radius, rectY);
+            ctx.lineTo(rectX + rectW - radius, rectY);
+            ctx.quadraticCurveTo(rectX + rectW, rectY, rectX + rectW, rectY + radius);
+            ctx.lineTo(rectX + rectW, rectY + rectH);
+            ctx.lineTo(rectX, rectY + rectH);
+            ctx.lineTo(rectX, rectY + radius);
+            ctx.quadraticCurveTo(rectX, rectY, rectX + radius, rectY);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Lock shackle (semi-circle)
+            ctx.beginPath();
+            ctx.arc(lockX, lockY - lockSize/4, lockSize/2, Math.PI, 0, false);
+            ctx.lineWidth = size / 15;
+            ctx.stroke();
+            
+            // Download the icon
+            canvas.toBlob(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `icon-${size}.png`;
+                a.click();
+                URL.revokeObjectURL(url);
+            });
+        }
+    </script>
+</body>
+</html>
+
