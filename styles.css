@@ -397,6 +397,9 @@ header h1 {
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
+    touch-action: none;
+    -webkit-touch-callout: none;
+    overscroll-behavior: none;
 }
 
 .sleep-lock.active {

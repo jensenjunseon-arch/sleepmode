@@ -181,7 +181,7 @@ class AlarmApp {
             this.deactivationCount++;
             this.saveDeactivationCount();
             
-            // Deactivate sleep lock
+            // Deactivate sleep lock - this restores all functionality
             this.deactivateSleepLock();
             
             // Clear all alarms to fully unlock
@@ -189,7 +189,31 @@ class AlarmApp {
             this.saveAlarms();
             this.renderAlarms();
             
-            alert(`Sleep mode deactivated. (Deactivation count: ${this.deactivationCount})`);
+            // Show notification instead of alert (less intrusive)
+            this.showNotification(`Sleep mode deactivated. (Deactivation count: ${this.deactivationCount})`);
+            
+            // Ensure the app is fully functional after deactivation
+            setTimeout(() => {
+                // Re-enable all form elements
+                const alarmForm = document.getElementById('alarmForm');
+                if (alarmForm) {
+                    alarmForm.style.display = 'block';
+                }
+                
+                // Ensure all buttons work
+                const allButtons = document.querySelectorAll('button');
+                allButtons.forEach(btn => {
+                    btn.disabled = false;
+                    btn.style.pointerEvents = 'auto';
+                });
+                
+                // Ensure all inputs work
+                const allInputs = document.querySelectorAll('input');
+                allInputs.forEach(input => {
+                    input.disabled = false;
+                    input.style.pointerEvents = 'auto';
+                });
+            }, 100);
         }
     }
 
@@ -616,9 +640,16 @@ class AlarmApp {
         const sleepLock = document.getElementById('sleepLock');
         sleepLock.classList.add('active');
         
-        // Prevent interaction with the app
+        // Prevent ALL interaction with the app - only sleep lock is accessible
         document.body.style.pointerEvents = 'none';
+        document.body.style.touchAction = 'none';
         sleepLock.style.pointerEvents = 'auto';
+        
+        // Hide all other content
+        const container = document.querySelector('.container');
+        if (container) {
+            container.style.display = 'none';
+        }
         
         // Update deactivation count display
         this.updateDeactivationCountDisplay();
@@ -629,16 +660,27 @@ class AlarmApp {
         // Prevent context menu and other interactions
         this.preventInteractionBound = this.preventInteraction.bind(this);
         this.preventMouseBound = this.preventMouseInteraction.bind(this);
+        this.preventTouchBound = this.preventTouchInteraction.bind(this);
         this.handleVisibilityChangeBound = this.handleVisibilityChange.bind(this);
         this.handleBlurBound = this.handleBlur.bind(this);
         
-        // Block all keyboard shortcuts and interactions
+        // Block ALL keyboard shortcuts and interactions
         document.addEventListener('contextmenu', this.preventInteractionBound, true);
         document.addEventListener('keydown', this.preventInteractionBound, true);
         document.addEventListener('keyup', this.preventInteractionBound, true);
+        document.addEventListener('keypress', this.preventInteractionBound, true);
         document.addEventListener('mousedown', this.preventMouseBound, true);
         document.addEventListener('mouseup', this.preventMouseBound, true);
         document.addEventListener('click', this.preventMouseBound, true);
+        document.addEventListener('touchstart', this.preventTouchBound, true);
+        document.addEventListener('touchmove', this.preventTouchBound, true);
+        document.addEventListener('touchend', this.preventTouchBound, true);
+        document.addEventListener('touchcancel', this.preventTouchBound, true);
+        
+        // Block gestures and swipes
+        document.addEventListener('gesturestart', this.preventTouchBound, true);
+        document.addEventListener('gesturechange', this.preventTouchBound, true);
+        document.addEventListener('gestureend', this.preventTouchBound, true);
         
         // Monitor tab/window switching
         document.addEventListener('visibilitychange', this.handleVisibilityChangeBound);
@@ -660,19 +702,49 @@ class AlarmApp {
         // Exit fullscreen mode
         this.exitFullscreen();
         
-        // Re-enable interaction
+        // Re-enable ALL interactions - restore everything to normal
         document.body.style.pointerEvents = 'auto';
+        document.body.style.touchAction = '';
+        document.body.style.position = '';
+        document.body.style.width = '';
+        document.body.style.overflow = '';
         
-        // Remove event listeners
+        // Show container again
+        const container = document.querySelector('.container');
+        if (container) {
+            container.style.display = '';
+            container.style.pointerEvents = 'auto';
+        }
+        
+        // Restore all interactive elements
+        const allElements = document.querySelectorAll('*');
+        allElements.forEach(element => {
+            if (element !== sleepLock && !sleepLock.contains(element)) {
+                element.style.pointerEvents = '';
+                element.style.touchAction = '';
+            }
+        });
+        
+        // Remove ALL event listeners
         if (this.preventInteractionBound) {
             document.removeEventListener('contextmenu', this.preventInteractionBound, true);
             document.removeEventListener('keydown', this.preventInteractionBound, true);
             document.removeEventListener('keyup', this.preventInteractionBound, true);
+            document.removeEventListener('keypress', this.preventInteractionBound, true);
         }
         if (this.preventMouseBound) {
             document.removeEventListener('mousedown', this.preventMouseBound, true);
             document.removeEventListener('mouseup', this.preventMouseBound, true);
             document.removeEventListener('click', this.preventMouseBound, true);
+        }
+        if (this.preventTouchBound) {
+            document.removeEventListener('touchstart', this.preventTouchBound, true);
+            document.removeEventListener('touchmove', this.preventTouchBound, true);
+            document.removeEventListener('touchend', this.preventTouchBound, true);
+            document.removeEventListener('touchcancel', this.preventTouchBound, true);
+            document.removeEventListener('gesturestart', this.preventTouchBound, true);
+            document.removeEventListener('gesturechange', this.preventTouchBound, true);
+            document.removeEventListener('gestureend', this.preventTouchBound, true);
         }
         if (this.handleVisibilityChangeBound) {
             document.removeEventListener('visibilitychange', this.handleVisibilityChangeBound);
@@ -683,6 +755,25 @@ class AlarmApp {
         
         // Restore browser shortcuts
         this.restoreBrowserShortcuts();
+        
+        // Ensure all buttons and inputs are clickable
+        const buttons = document.querySelectorAll('button');
+        buttons.forEach(button => {
+            button.style.pointerEvents = 'auto';
+            button.style.touchAction = 'manipulation';
+        });
+        
+        const inputs = document.querySelectorAll('input');
+        inputs.forEach(input => {
+            input.style.pointerEvents = 'auto';
+            input.style.touchAction = 'manipulation';
+        });
+        
+        // Restore window focus
+        window.focus();
+        
+        // Force a reflow to ensure styles are applied
+        void document.body.offsetHeight;
     }
 
     enterFullscreen() {
@@ -723,22 +814,33 @@ class AlarmApp {
     }
 
     preventInteraction(e) {
-        // Allow developer unlock keys (Command+Shift+D)
-        if (e.metaKey && e.shiftKey && e.key === 'D') {
-            return true; // Don't block developer unlock
+        // During sleep lock, ONLY allow deactivation button
+        if (this.sleepLockActive) {
+            const target = e.target;
+            
+            // Allow developer unlock keys (Command+Shift+D)
+            if (e.metaKey && e.shiftKey && e.key === 'D') {
+                return true; // Don't block developer unlock
+            }
+            
+            // ONLY allow deactivation button - nothing else
+            if (target.id === 'deactivationBtn' || target.closest('#deactivationBtn')) {
+                return true;
+            }
+            
+            // Block EVERYTHING else
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            return false;
         }
         
+        // When not in sleep lock, allow normal interactions
         const target = e.target;
-        
-        // Allow deactivation button clicks
-        if (target.id === 'deactivationBtn' || target.closest('#deactivationBtn')) {
-            return true;
-        }
         
         // Allow all interactions when alarm modal is shown
         const modal = document.getElementById('alarmModal');
         if (modal && modal.classList.contains('show')) {
-            // Allow all interactions with the alarm modal (input, buttons, etc.)
             if (modal.contains(target) || target.closest('#alarmModal')) {
                 return true;
             }
@@ -752,12 +854,9 @@ class AlarmApp {
         
         // Block Cmd/Ctrl combinations
         if (e.metaKey || e.ctrlKey) {
-            // Allow only specific combinations
-            if (!(e.metaKey && e.shiftKey && e.key === 'D')) {
-                e.preventDefault();
-                e.stopPropagation();
-                return false;
-            }
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
         }
         
         // Block Alt combinations (Alt+Tab, etc.)
@@ -774,36 +873,28 @@ class AlarmApp {
             return false;
         }
         
-        // Allow interaction with challenge input when alarm modal is shown
-        if (modal && modal.classList.contains('show') && target.id === 'challengeAnswer') {
-            return true; // Allow all text input for aphorism typing
-        }
-        
-        // Block all other keys during sleep lock
-        if (this.sleepLockActive) {
-            e.preventDefault();
-            e.stopPropagation();
-            return false;
-        }
-        
-        // Allow only specific keys for other inputs when not in sleep lock
-        const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter'];
-        const isNumber = /^[0-9]$/.test(e.key);
-        
-        if (!isNumber && !allowedKeys.includes(e.key)) {
-            e.preventDefault();
-            e.stopPropagation();
-            return false;
-        }
+        return true;
     }
 
     preventMouseInteraction(e) {
-        const target = e.target;
-        
-        // Allow deactivation button clicks
-        if (target.id === 'deactivationBtn' || target.closest('#deactivationBtn')) {
-            return true;
+        // During sleep lock, ONLY allow deactivation button
+        if (this.sleepLockActive) {
+            const target = e.target;
+            
+            // ONLY allow deactivation button - nothing else
+            if (target.id === 'deactivationBtn' || target.closest('#deactivationBtn')) {
+                return true;
+            }
+            
+            // Block EVERYTHING else
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            return false;
         }
+        
+        // When not in sleep lock, allow normal interactions
+        const target = e.target;
         
         // Allow all interactions when alarm modal is shown
         const modal = document.getElementById('alarmModal');
@@ -813,15 +904,28 @@ class AlarmApp {
             }
         }
         
-        // Block all other mouse interactions during sleep lock
+        return true;
+    }
+
+    preventTouchInteraction(e) {
+        // During sleep lock, ONLY allow deactivation button
         if (this.sleepLockActive) {
-            const sleepLock = document.getElementById('sleepLock');
-            if (!sleepLock.contains(target) && !target.closest('#sleepLock')) {
-                e.preventDefault();
-                e.stopPropagation();
-                return false;
+            const target = e.target;
+            
+            // ONLY allow deactivation button - nothing else
+            if (target.id === 'deactivationBtn' || target.closest('#deactivationBtn')) {
+                return true;
             }
+            
+            // Block ALL touch interactions
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            return false;
         }
+        
+        // When not in sleep lock, allow normal touch interactions
+        return true;
     }
 
     handleVisibilityChange() {
