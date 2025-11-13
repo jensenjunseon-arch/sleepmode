@@ -13,6 +13,8 @@ body {
     align-items: center;
     padding: 20px;
     color: #333;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
 }
 
 .container {
@@ -329,12 +331,18 @@ header h1 {
     height: 100%;
     background-color: rgba(0, 0, 0, 0.7);
     animation: fadeIn 0.3s;
+    overflow-y: scroll;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
 }
 
 .modal.show {
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
+    padding: 10px 0;
+    min-height: 100%;
 }
 
 .modal-content {
@@ -346,6 +354,9 @@ header h1 {
     width: 90%;
     animation: scaleIn 0.3s;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    margin: 20px auto;
+    position: relative;
+    touch-action: pan-y;
 }
 
 @keyframes scaleIn {
@@ -485,6 +496,10 @@ header h1 {
 .test-modal {
     max-width: 600px;
     text-align: left;
+    width: 95%;
+    margin: 10px auto;
+    padding: 30px 20px;
+    touch-action: pan-y;
 }
 
 .test-description {
@@ -695,10 +710,49 @@ header h1 {
         touch-action: manipulation;
     }
 
+    .modal {
+        overflow-y: scroll;
+        -webkit-overflow-scrolling: touch;
+        touch-action: pan-y;
+    }
+
     .modal-content {
-        padding: 30px 20px;
+        padding: 25px 15px;
         width: 95%;
         max-width: 95%;
+        margin: 10px auto;
+        position: relative;
+    }
+
+    .modal.show {
+        align-items: flex-start;
+        padding: 5px 0;
+        min-height: 100%;
+    }
+
+    .test-modal {
+        padding: 20px 15px;
+        width: 95%;
+        margin: 5px auto;
+    }
+
+    .test-modal h2 {
+        font-size: 1.5em;
+        margin-bottom: 15px;
+    }
+
+    .test-description {
+        font-size: 0.9em;
+        margin-bottom: 20px;
+    }
+
+    .question {
+        padding: 15px;
+    }
+
+    .test-option {
+        padding: 12px;
+        font-size: 0.95em;
     }
 
     .sleep-lock-content {

@@ -257,6 +257,10 @@ class AlarmApp {
     showTest() {
         const testModal = document.getElementById('testModal');
         testModal.classList.add('show');
+        // Prevent body scroll when modal is open
+        document.body.style.overflow = 'hidden';
+        document.body.style.position = 'fixed';
+        document.body.style.width = '100%';
     }
 
     submitBigFiveTest() {
@@ -285,6 +289,11 @@ class AlarmApp {
         // Close test modal and show alarm form
         const testModal = document.getElementById('testModal');
         testModal.classList.remove('show');
+        
+        // Restore body scroll
+        document.body.style.overflow = '';
+        document.body.style.position = '';
+        document.body.style.width = '';
         
         // Initialize app functionality now that test is complete
         this.initializeApp();
@@ -1060,11 +1069,19 @@ class AlarmApp {
         const modal = document.getElementById('analyticsModal');
         modal.classList.add('show');
         this.updateAnalytics();
+        // Prevent body scroll when modal is open
+        document.body.style.overflow = 'hidden';
+        document.body.style.position = 'fixed';
+        document.body.style.width = '100%';
     }
 
     closeAnalytics() {
         const modal = document.getElementById('analyticsModal');
         modal.classList.remove('show');
+        // Restore body scroll
+        document.body.style.overflow = '';
+        document.body.style.position = '';
+        document.body.style.width = '';
     }
 
     goBackToTest() {
@@ -1154,6 +1171,18 @@ if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/service-worker.js')
             .then((registration) => {
                 console.log('ServiceWorker registration successful:', registration.scope);
+                
+                // Check for updates every hour
+                setInterval(() => {
+                    registration.update();
+                }, 3600000);
+                
+                // Check for updates when page becomes visible
+                document.addEventListener('visibilitychange', () => {
+                    if (!document.hidden) {
+                        registration.update();
+                    }
+                });
             })
             .catch((error) => {
                 console.log('ServiceWorker registration failed:', error);

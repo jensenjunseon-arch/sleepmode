@@ -1,5 +1,5 @@
 // Service Worker for Sleep Mode Alarm PWA
-const CACHE_NAME = 'sleep-alarm-v1';
+const CACHE_NAME = 'sleep-alarm-v2';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -17,15 +17,26 @@ self.addEventListener('install', (event) => {
         return cache.addAll(urlsToCache);
       })
   );
+  // Force activation of new service worker
+  self.skipWaiting();
 });
 
-// Fetch event - serve from cache, fallback to network
+// Fetch event - network first, then cache (for faster updates)
 self.addEventListener('fetch', (event) => {
   event.respondWith(
-    caches.match(event.request)
+    fetch(event.request)
       .then((response) => {
-        // Return cached version or fetch from network
-        return response || fetch(event.request);
+        // Clone the response
+        const responseToCache = response.clone();
+        // Update cache with fresh content
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, responseToCache);
+        });
+        return response;
+      })
+      .catch(() => {
+        // If network fails, serve from cache
+        return caches.match(event.request);
       })
   );
 });
@@ -44,5 +55,7 @@ self.addEventListener('activate', (event) => {
       );
     })
   );
+  // Take control of all pages immediately
+  return self.clients.claim();
 });
 
