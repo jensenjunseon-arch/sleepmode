@@ -397,9 +397,12 @@ header h1 {
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
+<<<<<<< HEAD
     touch-action: none;
     -webkit-touch-callout: none;
     overscroll-behavior: none;
+=======
+>>>>>>> 0254b19 (Update sleep mode alarm app with mobile optimizations and fixes)
 }
 
 .sleep-lock.active {

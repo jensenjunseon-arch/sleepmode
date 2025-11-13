@@ -661,8 +661,14 @@ class AlarmApp {
         this.preventInteractionBound = this.preventInteraction.bind(this);
         this.preventMouseBound = this.preventMouseInteraction.bind(this);
         this.preventTouchBound = this.preventTouchInteraction.bind(this);
+        this.preventBackButtonBound = this.preventBackButton.bind(this);
         this.handleVisibilityChangeBound = this.handleVisibilityChange.bind(this);
         this.handleBlurBound = this.handleBlur.bind(this);
+        this.handlePopStateBound = this.handlePopState.bind(this);
+        
+        // Block browser back button and navigation
+        window.history.pushState(null, null, window.location.href);
+        window.addEventListener('popstate', this.handlePopStateBound);
         
         // Block ALL keyboard shortcuts and interactions
         document.addEventListener('contextmenu', this.preventInteractionBound, true);
@@ -752,9 +758,17 @@ class AlarmApp {
         if (this.handleBlurBound) {
             window.removeEventListener('blur', this.handleBlurBound);
         }
+        if (this.handlePopStateBound) {
+            window.removeEventListener('popstate', this.handlePopStateBound);
+        }
         
         // Restore browser shortcuts
         this.restoreBrowserShortcuts();
+        
+        // Allow back navigation again
+        if (window.history.length > 1) {
+            window.history.back();
+        }
         
         // Ensure all buttons and inputs are clickable
         const buttons = document.querySelectorAll('button');
@@ -946,7 +960,31 @@ class AlarmApp {
             // Bring focus back to the window
             setTimeout(() => {
                 window.focus();
+                this.enterFullscreen();
             }, 100);
+        }
+    }
+
+    preventBackButton(e) {
+        if (this.sleepLockActive) {
+            // Prevent browser back button
+            window.history.pushState(null, null, window.location.href);
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+    }
+
+    handlePopState(e) {
+        if (this.sleepLockActive) {
+            // Block back navigation - push state again to prevent going back
+            window.history.pushState(null, null, window.location.href);
+            // Keep focus on the page
+            window.focus();
+            this.enterFullscreen();
+            // Prevent the navigation
+            e.preventDefault();
+            e.stopPropagation();
         }
     }
 
@@ -959,6 +997,7 @@ class AlarmApp {
             if ((e.metaKey || e.ctrlKey) && e.key === 'w') {
                 e.preventDefault();
                 e.stopPropagation();
+                e.stopImmediatePropagation();
                 return false;
             }
             
@@ -966,6 +1005,7 @@ class AlarmApp {
             if ((e.metaKey || e.ctrlKey) && e.key === 't') {
                 e.preventDefault();
                 e.stopPropagation();
+                e.stopImmediatePropagation();
                 return false;
             }
             
@@ -973,6 +1013,7 @@ class AlarmApp {
             if ((e.metaKey || e.ctrlKey) && e.key === 'n') {
                 e.preventDefault();
                 e.stopPropagation();
+                e.stopImmediatePropagation();
                 return false;
             }
             
@@ -980,17 +1021,50 @@ class AlarmApp {
             if ((e.metaKey || e.ctrlKey) && e.key === 'Tab') {
                 e.preventDefault();
                 e.stopPropagation();
+                e.stopImmediatePropagation();
+                return false;
+            }
+            
+            // Block Alt + Left/Right (browser navigation)
+            if (e.altKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                return false;
+            }
+            
+            // Block F5 and Ctrl+R (refresh)
+            if (e.key === 'F5' || ((e.metaKey || e.ctrlKey) && e.key === 'r')) {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
                 return false;
             }
         };
         
         document.addEventListener('keydown', this.blockBrowserShortcutsBound, true);
+        document.addEventListener('keyup', this.blockBrowserShortcutsBound, true);
+        
+        // Block beforeunload to prevent navigation
+        this.beforeUnloadBound = (e) => {
+            if (this.sleepLockActive) {
+                e.preventDefault();
+                e.returnValue = '';
+                return '';
+            }
+        };
+        window.addEventListener('beforeunload', this.beforeUnloadBound);
     }
 
     restoreBrowserShortcuts() {
         if (this.blockBrowserShortcutsBound) {
             document.removeEventListener('keydown', this.blockBrowserShortcutsBound, true);
+            document.removeEventListener('keyup', this.blockBrowserShortcutsBound, true);
             this.blockBrowserShortcutsBound = null;
+        }
+        if (this.beforeUnloadBound) {
+            window.removeEventListener('beforeunload', this.beforeUnloadBound);
+            this.beforeUnloadBound = null;
         }
     }
 
